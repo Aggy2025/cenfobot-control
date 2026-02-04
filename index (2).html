@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sumobot BLE – Control Remoto</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex justify-center items-center">
+
+<div class="bg-white shadow p-6 rounded-xl flex flex-col items-center gap-4">
+
+  <h1 class="text-2xl font-bold mb-4">🤖 Sumobot BLE – Control Remoto</h1>
+  <p id="ble-status" class="text-red-600 font-semibold">BLE Desconectado</p>
+
+  <!-- Gamepad -->
+  <div class="flex flex-col items-center gap-2">
+    <button onclick="send('F')" class="bg-green-500 text-white p-4 rounded w-24">↑</button>
+    <div class="flex gap-2">
+      <button onclick="send('L')" class="bg-blue-500 text-white p-4 rounded w-24">←</button>
+      <button onclick="send('S')" class="bg-gray-500 text-white p-4 rounded w-24">STOP</button>
+      <button onclick="send('R')" class="bg-blue-500 text-white p-4 rounded w-24">→</button>
+    </div>
+    <button onclick="send('B')" class="bg-red-500 text-white p-4 rounded w-24">↓</button>
+  </div>
+
+  <label class="mt-2">Velocidad: <span id="vel-label">0.5</span></label>
+  <input id="speed" type="range" min="0.1" max="1" step="0.1" value="0.5">
+
+  <div id="log" class="bg-gray-900 text-white p-2 w-full h-32 overflow-y-auto text-sm font-mono mt-4"></div>
+
+  <button id="ble-btn" class="bg-indigo-600 text-white p-3 rounded mt-2 w-64">Conectar BLE</button>
+
+</div>
+
+<script>
+const UART_SERVICE = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const UART_TX = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+let bleDevice = null;
+let bleTx = null;
+
+const bleStatus = document.getElementById("ble-status");
+const logDiv = document.getElementById("log");
+const speedSlider = document.getElementById("speed");
+const velLabel = document.getElementById("vel-label");
+
+speedSlider.oninput = () => {
+    velLabel.textContent = speedSlider.value;
+};
+
+function logMsg(msg){
+    logDiv.innerHTML += `<p>> ${msg}</p>`;
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+document.getElementById("ble-btn").onclick = async () => {
+    try {
+        bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [{ services: [UART_SERVICE] }]
+        });
+        const server = await bleDevice.gatt.connect();
+        const service = await server.getPrimaryService(UART_SERVICE);
+        bleTx = await service.getCharacteristic(UART_TX);
+        bleStatus.textContent = `Conectado a ${bleDevice.name}`;
+        bleStatus.className = 'text-center font-semibold text-green-600';
+        logMsg('BLE conectado');
+    } catch(e){
+        logMsg("Error BLE: " + e);
+    }
+};
+
+async function send(cmd){
+    if(!bleTx){
+        logMsg("BLE no conectado");
+        return;
+    }
+    let vel = speedSlider.value;
+    const data = new TextEncoder().encode(`${cmd},${vel}`);
+    await bleTx.writeValueWithoutResponse(data);
+    logMsg(`Enviado: ${cmd} (${vel})`);
+}
+</script>
+
+</body>
+</html>
