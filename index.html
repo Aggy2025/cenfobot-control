@@ -9,13 +9,13 @@
 
 <style>
 
+button{
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
+
 button:active{
 transform:scale(0.95);
 transition:0.1s;
-}
-
-#log p:last-child{
-margin-bottom:0;
 }
 
 #led-virtual{
@@ -26,7 +26,6 @@ border:3px solid #444;
 margin-bottom:10px;
 transition:background-color 0.2s, box-shadow 0.2s;
 box-shadow:0 0 10px rgba(0,0,0,0.4);
-position:relative;
 }
 
 #emoji-container{
@@ -45,20 +44,20 @@ pointer-events:none;
 filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.3));
 }
 
+#log{
+font-family:monospace;
+}
+
 </style>
 </head>
 
-
 <body class="bg-gradient-to-br from-green-200 via-blue-300 to-purple-400 min-h-screen flex justify-center items-center p-4">
-
 
 <div class="bg-white shadow-2xl p-6 rounded-3xl flex flex-col items-center gap-4 w-full max-w-md relative">
 
-
-<h1 class="text-3xl font-extrabold text-gray-900 text-center mb-2">
+<h1 class="text-3xl font-extrabold text-gray-900 text-center">
 🤖 Control del Sumobot por BLE
 </h1>
-
 
 <div id="led-virtual" style="background-color:black;"></div>
 
@@ -70,42 +69,40 @@ BLE Desconectado
 <div class="flex flex-col items-center gap-3 w-full">
 
 <button onclick="send('F', this)"
-class="bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg w-full md:w-32 text-xl font-bold">
+class="bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl w-full md:w-32 text-xl font-bold">
 ↑
 </button>
-
 
 <div class="flex gap-3 w-full">
 
 <button onclick="send('L', this)"
-class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg flex-1 text-xl font-bold">
+class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl flex-1 text-xl font-bold">
 ←
 </button>
 
 <button onclick="send('S', this)"
-class="bg-gray-500 hover:bg-gray-600 text-white p-4 rounded-lg flex-1 text-xl font-bold">
+class="bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-xl flex-1 text-xl font-bold">
 STOP
 </button>
 
 <button onclick="send('R', this)"
-class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg flex-1 text-xl font-bold">
+class="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-xl flex-1 text-xl font-bold">
 →
 </button>
 
 </div>
 
-
 <button onclick="send('B', this)"
-class="bg-red-500 hover:bg-red-600 text-white p-4 rounded-lg w-full md:w-32 text-xl font-bold">
+class="bg-red-500 hover:bg-red-600 text-white p-4 rounded-xl w-full md:w-32 text-xl font-bold">
 ↓
 </button>
 
 </div>
 
 
-<div class="w-full flex flex-col items-center mt-2">
+<div class="w-full flex flex-col items-center">
 
-<label class="mt-2 mb-1 text-gray-800 font-semibold">
+<label class="text-gray-800 font-semibold">
 Velocidad: <span id="vel-label">50%</span>
 </label>
 
@@ -116,15 +113,15 @@ min="0.1"
 max="1"
 step="0.1"
 value="0.5"
-class="w-full rounded-lg">
+class="w-full">
 
 </div>
 
 
-<div class="flex gap-2 w-full mt-2">
+<div class="flex gap-2 w-full">
 
 <button onclick="clearLog()"
-class="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-lg flex-1 font-semibold">
+class="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded-lg flex-1 font-semibold">
 Limpiar log
 </button>
 
@@ -137,24 +134,20 @@ Conectar BLE
 
 
 <div id="log"
-class="bg-gray-900 text-white p-3 w-full h-40 overflow-y-auto text-sm font-mono mt-3 rounded-xl shadow-inner">
+class="bg-gray-900 text-white p-3 w-full h-40 overflow-y-auto text-sm mt-2 rounded-xl">
 </div>
-
 
 <div id="emoji-container"></div>
 
 </div>
 
-
 <script>
-
 
 const UART_SERVICE='6e400001-b5a3-f393-e0a9-e50e24dcca9e'
 const UART_TX='6e400002-b5a3-f393-e0a9-e50e24dcca9e'
 
 let bleDevice=null
 let bleTx=null
-
 
 const bleStatus=document.getElementById("ble-status")
 const logDiv=document.getElementById("log")
@@ -163,17 +156,13 @@ const velLabel=document.getElementById("vel-label")
 const ledVirtual=document.getElementById("led-virtual")
 const emojiContainer=document.getElementById("emoji-container")
 
-
 speedSlider.oninput=()=>{
 velLabel.textContent=`${Math.round(speedSlider.value*100)}%`
 }
 
-
-
 function logMsg(msg,color='white'){
 
 const p=document.createElement('p')
-
 p.textContent=`> ${msg}`
 p.style.color=color
 
@@ -186,16 +175,10 @@ logDiv.scrollTop=logDiv.scrollHeight
 
 }
 
-
-
 function clearLog(){
-
 logDiv.innerHTML=''
 logMsg("Log limpiado","lime")
-
 }
-
-
 
 function setLED(color){
 
@@ -208,8 +191,6 @@ else if(color==='yellow') ledVirtual.style.boxShadow='0 0 25px yellow'
 else ledVirtual.style.boxShadow='0 0 10px rgba(0,0,0,0.4)'
 
 }
-
-
 
 function showEmoji(emoji){
 
@@ -255,8 +236,6 @@ span.remove()
 
 }
 
-
-
 async function reconnectBLE(){
 
 if(!bleDevice) return
@@ -264,26 +243,21 @@ if(!bleDevice) return
 try{
 
 const server=await bleDevice.gatt.connect()
-
 const service=await server.getPrimaryService(UART_SERVICE)
-
 bleTx=await service.getCharacteristic(UART_TX)
 
 bleStatus.textContent=`Conectado a ${bleDevice.name}`
-bleStatus.className='text-center font-bold text-green-600'
+bleStatus.className='text-green-600 font-bold'
 
-logMsg("BLE reconectado automáticamente","lime")
+logMsg("BLE reconectado","lime")
 
 }catch(e){
 
-logMsg("Error reconectando BLE: "+e,"red")
-setLED('black')
+logMsg("Error reconectando BLE","red")
 
 }
 
 }
-
-
 
 document.getElementById("ble-btn").onclick=async()=>{
 
@@ -293,46 +267,34 @@ bleDevice=await navigator.bluetooth.requestDevice({
 filters:[{services:[UART_SERVICE]}]
 })
 
-bleDevice.addEventListener('gattserverdisconnected',async()=>{
+bleDevice.addEventListener('gattserverdisconnected',()=>{
 
 bleStatus.textContent="BLE Desconectado"
-bleStatus.className='text-center font-bold text-red-600'
+bleStatus.className='text-red-600 font-bold'
 
-logMsg("BLE desconectado, intentando reconectar...","yellow")
-
+logMsg("BLE desconectado","yellow")
 setLED('black')
 
 setTimeout(reconnectBLE,2000)
 
 })
 
-
 const server=await bleDevice.gatt.connect()
-
 const service=await server.getPrimaryService(UART_SERVICE)
-
 bleTx=await service.getCharacteristic(UART_TX)
 
-
 bleStatus.textContent=`Conectado a ${bleDevice.name}`
-bleStatus.className='text-center font-bold text-green-600'
+bleStatus.className='text-green-600 font-bold'
 
 logMsg("BLE conectado","lime")
 
-setLED('orange')
-
-setTimeout(()=>setLED('black'),1000)
-
 }catch(e){
 
-logMsg("Error BLE: "+e,'red')
-setLED('black')
+logMsg("Error BLE","red")
 
 }
 
 }
-
-
 
 async function send(cmd,btn=null){
 
@@ -352,7 +314,7 @@ try{
 await bleTx.writeValueWithoutResponse(data)
 
 let color='white'
-let emoji='⚪'
+let emoji=null
 
 switch(cmd){
 
@@ -374,12 +336,6 @@ break
 
 case 'S':
 color='yellow'
-emoji='⏹️'
-break
-
-case 'C':
-color='magenta'
-emoji='🎉'
 break
 
 }
@@ -388,7 +344,7 @@ setLED(color)
 
 logMsg(`Enviado: ${cmd} (${Math.round(vel*100)}%)`,color)
 
-showEmoji(emoji)
+if(emoji) showEmoji(emoji)
 
 if(btn){
 
@@ -402,8 +358,7 @@ btn.classList.remove('scale-95')
 
 }catch(e){
 
-logMsg("Error enviando: "+e,'red')
-setLED('black')
+logMsg("Error enviando",'red')
 
 }
 
